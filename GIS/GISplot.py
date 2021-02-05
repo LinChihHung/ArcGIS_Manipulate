@@ -132,18 +132,18 @@ class PlotFig():
                 va='center', fontsize=16, weight='bold')
             
             # 3. 坡長的箭頭與文字
-            for i in range(1, self.hilltopIndex):
-                ax.annotate(
-                    text='',
-                    xy=(self.distance[i], ymin+5),
-                    xytext=(self.distance[i+1], ymin+5),
-                    arrowprops=dict(facecolor='black', arrowstyle='<|-|>'), va='center', fontsize=16)
-                center = (self.distance[i] + self.distance[i+1])/2
-                # ax.text(center, ymin+8, r'$\circ$', fontsize=60)
-                ax.annotate(
-                    text=f'S{i}', 
-                    xy=(center, ymin+8), 
-                    va='center', ha='center', fontsize=16, weight='bold')
+            # for i in range(1, self.hilltopIndex):
+            #     ax.annotate(
+            #         text='',
+            #         xy=(self.distance[i], ymin+5),
+            #         xytext=(self.distance[i+1], ymin+5),
+            #         arrowprops=dict(facecolor='black', arrowstyle='<|-|>'), va='center', fontsize=16)
+            #     center = (self.distance[i] + self.distance[i+1])/2
+            #     # ax.text(center, ymin+8, r'$\circ$', fontsize=60)
+            #     ax.annotate(
+            #         text=f'S{i}', 
+            #         xy=(center, ymin+8), 
+            #         va='center', ha='center', fontsize=16, weight='bold')
         # 如果山坡地的形式為遞減下去的
         # 圖例置於左下角
         # 箭頭與文字自ymmax開始起算       
@@ -177,19 +177,19 @@ class PlotFig():
                 xy=(self.hilltopX, ymax-21), 
                 va='center', fontsize=16, weight='bold')
             
-            # 3. 坡長的箭頭與文字
-            for i in range(1, self.hilltopIndex):
-                ax.annotate(
-                    text='',
-                    xy=(self.distance[i], ymin-10),
-                    xytext=(self.distance[i+1], ymin-10),
-                    arrowprops=dict(facecolor='black', arrowstyle='<|-|>'), va='center', fontsize=16)
-                center = (self.distance[i] + self.distance[i+1])/2
-                # ax.text(center, ymin+8, r'$\circ$', fontsize=60)
-                ax.annotate(
-                    text=f'S{i}', 
-                    xy=(center, ymin-13), 
-                    va='center', ha='center', fontsize=16, weight='bold')
+            # # 3. 坡長的箭頭與文字
+            # for i in range(1, self.hilltopIndex):
+            #     ax.annotate(
+            #         text='',
+            #         xy=(self.distance[i], ymax-10),
+            #         xytext=(self.distance[i+1], ymax-10),
+            #         arrowprops=dict(facecolor='black', arrowstyle='<|-|>'), va='center', fontsize=16)
+            #     center = (self.distance[i] + self.distance[i+1])/2
+            #     # ax.text(center, ymin+8, r'$\circ$', fontsize=60)
+            #     ax.annotate(
+            #         text=f'S{i}', 
+            #         xy=(center, ymax-13), 
+            #         va='center', ha='center', fontsize=16, weight='bold')
 
         # 坡度的標示以及弧度
         for i in range(len(self.slope)-1):
@@ -275,7 +275,7 @@ class PlotFig():
         fig.gca().set_aspect('equal', adjustable='box')
         fig.tight_layout()
 
-        path = r'C:\Users\heteng\Desktop\桃園\龜山\Plot_v2'
+        path = r'C:\Users\heteng\Desktop\桃園'
         plt.savefig(path + os.sep + f'{self.name}.jpg', dpi=300)
 
 

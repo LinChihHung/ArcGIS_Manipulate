@@ -200,19 +200,20 @@ class GISControl():
         if hillFlag:
             rawHilltopIndex = rawDataFrame[rawDataFrame['remarks'] == '坡頂線'].index.values[0]
         else:
-            rawHilltopIndex = np.flatnonzero(rawDataFrame['slopePercent'][0:-2].values > 15)[-1]
+            rawHilltopIndex = np.flatnonzero(rawDataFrame['slopeDegree'][0:-2].values > 15)[-1]
             proHilltopCoords = rawDataFrame['coordinates'][rawHilltopIndex]
             rawDataFrame.loc[rawHilltopIndex, 'remarks'] = '坡頂線'
         
+
         # calculate composite hill
         complexDataframe, hilltopIndex = self.composite(
             dataframe=rawDataFrame, 
             rawHilltopIndex=rawHilltopIndex, 
             proHilltopCoords=proHilltopCoords
             )
-        
         # calculate withdraw and withdrawSum
-        finalDataFrame = self.withdraw(complexDataframe, hilltopIndex)
+        finalDataFrame = self.withdraw(complexDataframe, hilltopIndex)     
+        
 
         """Some Coordinates"""
         self.profileInnerCoords = profileInnerCoords
@@ -331,7 +332,10 @@ class GISControl():
 
     def composite(self, dataframe, rawHilltopIndex, proHilltopCoords):
         """
-        將坡度做處理
+        if status == origin
+        只將坡度做簡單的處理, 將等高線以及坡頂線外的點拉平
+        if status == complex
+        將坡度做複合坡處理
         規則:
         第一步:
         1.如果兩個小於15度的坡度中間存在一個大於15度的坡，則此坡將會拿掉
@@ -343,35 +347,41 @@ class GISControl():
         dataframe.loc[0, 'elevation'] = dataframe.loc[1, 'elevation']
         dataframe.loc[rawHilltopIndex::, 'elevation'] = dataframe['elevation'][rawHilltopIndex]
         
-        # find out the index that should be delete
-        deleteIndex = []
-        for i in range(2, rawHilltopIndex):
-            if dataframe['slopeDegree'][i] > 15:
-                if dataframe['slopeDegree'][i-1] < 15 and dataframe['slopeDegree'][i+1] < 15:
-                    deleteIndex.append(i)
-        rawComplexDataframe = dataframe.drop(index=deleteIndex)
-        complexDataframe = self.generate(dataframe=rawComplexDataframe.reset_index())
+        if self.status == 'origin':
+            finalComplexDataframe = self.generate(dataframe=dataframe)        
+        
+        elif self.status == 'complex':
+            # find out the index that should be delete
+            deleteIndex = []
+            for i in range(2, rawHilltopIndex):
+                if dataframe['slopeDegree'][i] > 15:
+                    if dataframe['slopeDegree'][i-1] < 15 and dataframe['slopeDegree'][i+1] < 15:
+                        deleteIndex.append(i)
+            rawComplexDataframe = dataframe.drop(index=deleteIndex)
+            complexDataframe = self.generate(dataframe=rawComplexDataframe.reset_index())
 
-        complexIndex = []
-        newHilltopIndex = complexDataframe[complexDataframe['remarks'] == '坡頂線'].index.values[0]
-        for i in range(2, newHilltopIndex):
-            if complexDataframe['slopeFactor'][i] == complexDataframe['slopeFactor'][i+1]:
-                # slope 介於15-45為特殊情況，另外處理
-                if complexDataframe['slopeFactor'][i] == 0.5:
-                    # 計算兩坡地之間的差值
-                    # 差值取絕對值並向下取整
-                    deviation = np.floor(abs(
-                        complexDataframe['slopeDegree'][i] - complexDataframe['slopeDegree'][i+1]
-                    ))
-                    # 若差值大於10則不刪除
-                    if deviation > 10:
-                        pass
+            complexIndex = []
+            newHilltopIndex = complexDataframe[complexDataframe['remarks'] == '坡頂線'].index.values[0]
+            for i in range(2, newHilltopIndex):
+                if complexDataframe['slopeFactor'][i] == complexDataframe['slopeFactor'][i+1]:
+                    # slope 介於15-45為特殊情況，另外處理
+                    if complexDataframe['slopeFactor'][i] == 0.5:
+                        # 計算兩坡地之間的差值
+                        # 差值取絕對值並向下取整
+                        deviation = np.floor(abs(
+                            complexDataframe['slopeDegree'][i] - complexDataframe['slopeDegree'][i+1]
+                        ))
+                        # 若差值大於10則不刪除
+                        if deviation > 10:
+                            pass
+                        else:
+                            complexIndex.append(i)
                     else:
                         complexIndex.append(i)
-                else:
-                    complexIndex.append(i)
-        rawFinalComplexDataframe = complexDataframe.drop(index=complexIndex)
-        finalComplexDataframe = self.generate(dataframe=rawFinalComplexDataframe.reset_index())
+            rawFinalComplexDataframe = complexDataframe.drop(index=complexIndex)
+            finalComplexDataframe = self.generate(dataframe=rawFinalComplexDataframe.reset_index())
+        else:
+            raise TypeError
 
         # final hilltopIndex
         hilltopIndex = finalComplexDataframe[finalComplexDataframe['remarks'] == '坡頂線'].index.values[0]
@@ -417,6 +427,6 @@ if __name__ == '__main__':
     profileName=profileName, hilltopName=hilltopName, 
     contourName=contourName, drawoutName=drawoutName, 
     rasterName=rasterName,
-    num=0
+    num=0, status='origin'
     )
-    # print(GIS.finalDataFrame)
+    print(GIS.finalDataFrame)
