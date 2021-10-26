@@ -4,15 +4,17 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import matplotlib.patches as patches
 import numpy as np
+import six
 
 class PlotFig():
 
     def __init__(
-        self, finalDataFrame, name,
+        self, finalDataFrame, plotDataFrame, name,
         proDrawoutCoords, proHilltopCoords, hilltopIndex, 
         base=20, divisor=4
         ):
         self.finalDataFrame = finalDataFrame
+        self.plotDataFrame = plotDataFrame
         self.name = name
 
         self.proDrawoutCoords = proDrawoutCoords
@@ -31,7 +33,8 @@ class PlotFig():
         self.withdrawX = None
         self.vline()
 
-        self.legalWithdraw = round((self.withdrawX - self.hilltopX), 1) #法定退縮距離
+        # self.legalWithdraw = round((self.withdrawX - self.hilltopX), 1)
+        self.legalWithdraw = round(max(self.finalDataFrame['withdrawSum']), 1) #法定退縮距離
         self.actualWithdraw = round((self.drawoutX - self.hilltopX), 1) #實際退縮距離
 
         self.hilldef()
@@ -57,7 +60,11 @@ class PlotFig():
     def mainplot(self):
 
         # Some Basic Setup
-        fig, ax = plt.subplots(figsize=(21, 9))
+        # size, set ax3 height
+        col_width=3.0
+        row_height=0.625
+        size = ((np.array(self.plotDataFrame.shape[::-1]) + np.array([0, 1])) * np.array([col_width, row_height]))[1]
+        fig, (ax, ax2, ax3) = plt.subplots(3, 1, figsize=(21, 10+size), gridspec_kw={'height_ratios': [9, 1, size]})
         plt.rcParams['font.sans-serif'] = ['Microsoft JhengHei']
         plt.rcParams['xtick.labelsize'] = 18
         plt.rcParams['ytick.labelsize'] = 18
@@ -71,10 +78,6 @@ class PlotFig():
         ax.axvline(x=self.withdrawX, linestyle='--', linewidth=3, color='tab:green', label='退縮終點')
         ax.axvline(x=self.drawoutX, linestyle='--', linewidth=3, color='tab:brown', label='建議劃出範圍')
         
-        # legend of D1, D2
-        # ax.plot([], [], color='w', label='D1 : 法定退縮距離 (m)')
-        # ax.scatter([], [], alpha=0, label="D2 : 實際退縮距離 (m)")
-        # ax.plot([], [], color='w', label='D2 : 實際退縮距離 (m)')
         
         # settings
         ax.set_title(f'{self.name} 地形剖面之退縮距離計算', fontsize=28)
@@ -132,25 +135,26 @@ class PlotFig():
                 va='center', fontsize=16, weight='bold')
             
             # 3. 坡長的箭頭與文字
-            # for i in range(1, self.hilltopIndex):
-            #     ax.annotate(
-            #         text='',
-            #         xy=(self.distance[i], ymin+5),
-            #         xytext=(self.distance[i+1], ymin+5),
-            #         arrowprops=dict(facecolor='black', arrowstyle='<|-|>'), va='center', fontsize=16)
-            #     center = (self.distance[i] + self.distance[i+1])/2
-            #     # ax.text(center, ymin+8, r'$\circ$', fontsize=60)
-            #     ax.annotate(
-            #         text=f'S{i}', 
-            #         xy=(center, ymin+8), 
-            #         va='center', ha='center', fontsize=16, weight='bold')
+            for i in range(1, self.hilltopIndex):
+                ax.annotate(
+                    text='',
+                    xy=(self.distance[i], ymin+5),
+                    xytext=(self.distance[i+1], ymin+5),
+                    arrowprops=dict(facecolor='black', arrowstyle='<|-|>'), va='center', fontsize=16)
+                center = (self.distance[i] + self.distance[i+1])/2
+                # ax.text(center, ymin+8, r'$\circ$', fontsize=60)
+                ax.annotate(
+                    text=f'S{i}', 
+                    xy=(center, ymin+8), 
+                    va='center', ha='center', fontsize=16, weight='bold')
         # 如果山坡地的形式為遞減下去的
         # 圖例置於左下角
         # 箭頭與文字自ymmax開始起算       
         if self.hillType == 'descending':
             # 圖例
             ax.legend(loc='lower left', fontsize=16)
-            
+            legend.set_title('D1 : 法定退縮距離 (m) \nD2 : 實際退縮距離 (m)', prop={'size': 16})
+            legend._legend_box.align = "left"            
             # 1. 法定退縮距離的箭頭與文字
             # (1) 法定退縮距離的箭頭
             ax.annotate(
@@ -177,19 +181,19 @@ class PlotFig():
                 xy=(self.hilltopX, ymax-21), 
                 va='center', fontsize=16, weight='bold')
             
-            # # 3. 坡長的箭頭與文字
-            # for i in range(1, self.hilltopIndex):
-            #     ax.annotate(
-            #         text='',
-            #         xy=(self.distance[i], ymax-10),
-            #         xytext=(self.distance[i+1], ymax-10),
-            #         arrowprops=dict(facecolor='black', arrowstyle='<|-|>'), va='center', fontsize=16)
-            #     center = (self.distance[i] + self.distance[i+1])/2
-            #     # ax.text(center, ymin+8, r'$\circ$', fontsize=60)
-            #     ax.annotate(
-            #         text=f'S{i}', 
-            #         xy=(center, ymax-13), 
-            #         va='center', ha='center', fontsize=16, weight='bold')
+            # 3. 坡長的箭頭與文字
+            for i in range(1, self.hilltopIndex):
+                ax.annotate(
+                    text='',
+                    xy=(self.distance[i], ymax-10),
+                    xytext=(self.distance[i+1], ymax-10),
+                    arrowprops=dict(facecolor='black', arrowstyle='<|-|>'), va='center', fontsize=16)
+                center = (self.distance[i] + self.distance[i+1])/2
+                # ax.text(center, ymin+8, r'$\circ$', fontsize=60)
+                ax.annotate(
+                    text=f'S{i}', 
+                    xy=(center, ymax-13), 
+                    va='center', ha='center', fontsize=16, weight='bold')
 
         # 坡度的標示以及弧度
         for i in range(len(self.slope)-1):
@@ -271,8 +275,33 @@ class PlotFig():
             if mode == 'peak' or mode == 'pass':
                 pass
 
+        #### ax2, 實際退縮距離大於法定退縮文字 ###
+        txt = f'實際退縮距離 {self.actualWithdraw} m $\geq$ 法定退縮距離 {self.legalWithdraw} m'
+        ax2.text(0.5, 0.5, txt, horizontalalignment='center', verticalalignment='center', transform=ax2.transAxes, fontsize=36)
+        ax2.axis('off')
 
-        fig.gca().set_aspect('equal', adjustable='box')
+
+        #### ax3, table ###
+        header_color='#40466e'
+        row_colors=['#f1f1f2', 'w']
+        edge_color='k'
+        bbox=[0, 0, 1, 1]
+        header_columns=0        
+        
+        table = ax3.table(cellText=self.plotDataFrame.values, bbox=bbox, colLabels=self.plotDataFrame.columns, loc ='center')
+        table.set_fontsize(36)
+        for k, cell in  six.iteritems(table._cells):
+            cell.set_edgecolor(edge_color)
+            cell.set_text_props(ha='center')
+            cell.set_text_props(va='center_baseline')
+            if k[0] == 0 or k[1] < header_columns:
+                cell.set_text_props(weight='bold', color='w')
+                cell.set_facecolor(header_color)
+            else:
+                cell.set_facecolor(row_colors[k[0]%len(row_colors) ])
+        ax3.axis('off')
+
+        ax.set_aspect('equal', adjustable='box')
         fig.tight_layout()
 
         path = r'C:\Users\heteng\Desktop\桃園'

@@ -5,32 +5,32 @@ import pandas as pd
 
 def main():
     
-    path = r'C:\Users\heteng\Desktop\桃園\通盤檢討修正_1100201\CSV'
+    path = r'C:\Users\heteng\Desktop\桃園\龜山\CSV'
 
-    os.chdir(r'C:\Users\heteng\Desktop\桃園\通盤檢討修正_1100201')
+    os.chdir(r'C:\Users\heteng\Desktop\桃園\龜山')
 
-    profileName = '剖面線.shp'
-    hilltopName = '坡頂線.shp'
-    drawoutName = '劃出範圍修正_1091221.shp'
-    contourName = '95年以前等高線_clip範圍.shp'
+    profileName = '龜山剖面線0507.shp'
+    hilltopName = '龜山坡頂_5.10.shp'
+    drawoutName = '龜山劃出範圍_5.10.shp'
+    contourName = '第五版大湖等高線.shp'
 
-    rasterName = 'dem_5m.tif'
+    rasterName = '龜山區.tif'
 
 
     GIS_Error = []
     Plot_Error = []
 
-    for i in range(34):
+    for i in range(1, 2):
         try:
             print(i)
             GIS = GISControl(
                 profileName=profileName, hilltopName=hilltopName, 
                 contourName=contourName, drawoutName=drawoutName, 
                 rasterName=rasterName,
-                num=4, status='origin'
+                num=20, status='complex'
                 )
                     
-            finalDataFrame = GIS.finalDataFrame
+            finalDataFrame, plotDataFrame = GIS.finalDataFrame
             name = GIS.name
             proDrawoutCoords = GIS.proDrawoutCoords
             proHilltopCoords = GIS.proHilltopCoords
@@ -47,24 +47,13 @@ def main():
         
 
         image = PlotFig(
-            finalDataFrame=finalDataFrame, name=name,  
+            finalDataFrame=finalDataFrame, plotDataFrame=plotDataFrame, name=name,  
             proDrawoutCoords=proDrawoutCoords, proHilltopCoords=proHilltopCoords,
             hilltopIndex=hilltopIndex
             )
             
     print('GIS Error: ', GIS_Error)
     print('Plot_Error: ', Plot_Error)
-    # finalDataFrame = pd.read_csv(r'C:\Users\heteng\Desktop\龜山1-3\CSV\龜山-1-1-80_New.csv')
-    # name = '龜山1-3'
-    # proDrawoutCoords = finalDataFrame['coordinates'].iloc[4]
-    # proHilltopCoords = finalDataFrame['coordinates'].iloc[3]
-    # hilltopIndex = 3
-
-    # image = PlotFig(
-    # finalDataFrame=finalDataFrame, name=name,  
-    # proDrawoutCoords=proDrawoutCoords, proHilltopCoords=proHilltopCoords,
-    # hilltopIndex=hilltopIndex
-    # )
 
     
 if __name__ == '__main__':

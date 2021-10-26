@@ -212,7 +212,8 @@ class GISControl():
             proHilltopCoords=proHilltopCoords
             )
         # calculate withdraw and withdrawSum
-        finalDataFrame = self.withdraw(complexDataframe, hilltopIndex)     
+        finalDataFrame = self.withdraw(complexDataframe, hilltopIndex)
+        plotDataFrame = self.plotDataFrame(finalDataFrame) 
         
 
         """Some Coordinates"""
@@ -224,7 +225,7 @@ class GISControl():
         self.hilltopIndex = hilltopIndex
         
         
-        return finalDataFrame
+        return finalDataFrame, plotDataFrame
 
     def generate(self, dataframe):
         """
@@ -410,6 +411,57 @@ class GISControl():
 
 
         return dataframe
+    
+
+    def plotDataFrame(self, dataframe):
+        shape = [i for i, val in enumerate(dataframe['remarks']) if val == '劃出範圍'][0]
+        indexList = []
+        horizonDist = []
+        verticalDist = []
+        geology = []
+        slope = []
+        equation = []
+        withdrawDist = []
+
+        for num in range(2, shape):
+            indexList.append(f'S{num-1}')
+            horizonDist.append(round(dataframe['distance'][num], 1))
+            verticalDist.append(round(dataframe['deltaEL'][num], 1))
+            geology.append('砂礫層')
+            slope.append(int(np.floor(dataframe['slopeDegree'][num])))
+            
+            if dataframe['slopeFactor'][num] == 0:
+                equation.append('-')
+            
+            if dataframe['slopeFactor'][num] == 0.5:
+                equationStr = str(int(dataframe['deltaEL'][num])) + ' x ' + '1/2'
+                equation.append(equationStr)
+            
+            if dataframe['slopeFactor'][num] == 0.67:
+                equationStr = str(int(dataframe['deltaEL'][num])) + ' x ' + '2/3'
+                equation.append(equationStr)
+
+            if dataframe['slopeFactor'][num] == 1:
+                equationStr = str(int(dataframe['deltaEL'][num])) + ' x ' + '1'
+                equation.append(equationStr)
+                
+            withdrawDist.append(round(dataframe['withdraw'][num], 1))
+
+        indexList.append('總計')
+        horizonDist.append(round(sum(horizonDist), 1))
+        verticalDist.append(sum(verticalDist))
+        geology.append('')
+        slope.append('')
+        equation.append('')
+        withdrawDist.append(round(sum(withdrawDist), 1))
+
+        comboList = [indexList, horizonDist, verticalDist, geology, slope, equation, withdrawDist]
+        plotDataFrame = pd.DataFrame(comboList).transpose()
+        plotDataFrame.columns = ['項次', '水平距 (m)', '垂直距 (m)', '地質', '坡度 ($^\circ$)', '計算式', '應退縮距離 (m)']
+        
+        return plotDataFrame
+
+
 if __name__ == '__main__':
     import os
 
